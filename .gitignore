@@ -45,3 +45,4 @@ build/
 .vscode/
 adaptec*
 testout
+include/ThreadPool.hpp

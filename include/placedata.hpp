@@ -9,6 +9,7 @@ public:
     int MacroCount;
     int netCount;
     int pinCount;
+    int numRows;
 
 
     vector<shared_ptr<Module>> Nodes;
@@ -17,7 +18,9 @@ public:
     vector<shared_ptr<Net>> Nets;
     vector<SiteRow> SiteRows;
 
-    map<string, shared_ptr<Module>> moduleMap; 
+    size_t max_net_degree{0};
+
+    unordered_map<string, shared_ptr<Module>> moduleMap; 
     shared_ptr<Module> getModuleByName(const string &name){
         if(moduleMap.find(name) != moduleMap.end()){
             return moduleMap[name];

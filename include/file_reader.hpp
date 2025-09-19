@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <memory>
 #include "myplace.hpp"
+#include <charconv>
+#include <timer.hpp>
 
 
 namespace fs = std::filesystem;
@@ -30,18 +32,20 @@ class FileReader{
             std::filesystem::path wts_path = path / (dir_name + ".wts");
             pdata = make_shared<PlaceData>();
             // read_aux(aux_path);
+            read_pl(pl_path);
             read_nets(nets_path);
             // read_nodes(nodes_path);
-            read_pl(pl_path);
-            // read_scl(scl_path);
+            
+            read_scl(scl_path);
             // read_wts(wts_path);
             myplace = make_shared<MyPlacer>(pdata.get());
         }
-        void print(){
-            std::cout << "1"<<std::endl;
-            for(unsigned i = 0;i< pdata->Nets.size();i++){
-                std::cout<<pdata->Nets[i]->name<<std::endl;
-            }
+
+        void test_print(){
+            // std::cout << "here are test print"<<std::endl;
+            // for(unsigned i = 0;i< pdata->Nets.size();i++){
+            //     std::cout<<pdata->Nets[i]->name<<std::endl;
+            // }
             // std::ofstream out("/home/ezio/ClassProject3/testout");
             // for(auto module:pdata->moduleMap)
             // {
@@ -61,6 +65,8 @@ class FileReader{
     shared_ptr<PlaceData> pdata;
     shared_ptr<MyPlacer> myplace;
 
+    int READ_LINENUMS=1024;
+
 
 
     //helper functions
@@ -71,6 +77,7 @@ class FileReader{
      * @return std::vector<std::string> vector of splited strings
      */
     std::vector<std::string> splist_by_space(std::string& line);
+
 };
 
 

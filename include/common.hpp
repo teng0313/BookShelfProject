@@ -14,6 +14,7 @@
 #include <set>
 #include "string.h"
 #include <memory>
+#include <unordered_map>
 
 using namespace std;
 
