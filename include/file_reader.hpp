@@ -41,6 +41,13 @@ class FileReader{
             myplace = make_shared<MyPlacer>(pdata.get());
         }
 
+        shared_ptr<PlaceData> get_pdata(){
+            return pdata;
+        }
+
+        shared_ptr<MyPlacer> get_myplace(){
+            return myplace;
+        }
         void test_print(){
             // std::cout << "here are test print"<<std::endl;
             // for(unsigned i = 0;i< pdata->Nets.size();i++){

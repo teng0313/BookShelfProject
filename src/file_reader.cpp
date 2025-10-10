@@ -32,7 +32,7 @@ void FileReader::read_pl(const fs::path& filePath)
     std::string line;
     while(std::getline(file,line))
     {
-             //自动用移动构造（而不是拷贝构造)
+        //自动用移动构造（而不是拷贝构造)
         auto splist_result=splist_by_space(line);
         //unfit data handle
         if(splist_result.size()<5)
@@ -52,12 +52,14 @@ void FileReader::read_pl(const fs::path& filePath)
             module=make_shared<Module>();
             module->Init();
             pdata->moduleMap[module_name]=module;
+            pdata->Nodes.push_back(module);
         }
 
         module.get()->center.x=stof(x_coordinate);
         module.get()->center.y=stof(y_coordinate);
         module.get()->orientation=direction=="N" ? Orientation::N : direction=="E" ? Orientation::E : direction=="S" ?  Orientation::S : direction=="W" ? Orientation::W : 0;
         module.get()->isFixed=is_fixed;
+
     }
     
     cout<<"read_pl done"<<endl;

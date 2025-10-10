@@ -28,6 +28,18 @@ public:
         return nullptr;
     }
 
+    void print_info(){ 
+        int num_modules = Nodes.size();
+        int macro_count = 0;
+        int fixed_count = 0;
+        for(auto module:Nodes){
+            if(module->isMacro) MacroCount++;
+            if(module->isFixed) fixed_count++;
+        }
+        std::ofstream fout("/home/ezio/ClassProject3/info.txt");
+        fout << "Object #:"<< num_modules <<"(="<<static_cast<int>(num_modules/1000)<<"k)"<< "(fixed:"<< fixed_count <<")(macro:" <<macro_count <<") " << std::endl;
+    }
+
     
 };
 #endif

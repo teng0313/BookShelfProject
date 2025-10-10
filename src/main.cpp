@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
   
   auto fr = std::make_shared<FileReader>(file);
   fr->test_print();
+  fr->get_pdata()->print_info();
   std::cout << "File read successfully!" << std::endl;
 
   return 0;
