@@ -39,6 +39,8 @@ public:
         isFixed = false;
      }
     POS_2D center; 
+
+    float getArea() const { return area; }
  
 };
 class SiteRow 
@@ -57,7 +59,10 @@ public:
     double height;             
     double step;                
     POS_2D start;               
-    POS_2D end;                 
+    POS_2D end;    
+    
+    double getSizeRowArea() const { return height * (end.x - start.x); }
+    
 };
 
 class Pin
@@ -89,4 +94,30 @@ public:
   void init() { netPins.clear(); }
 };
 
+
+class Bin
+{ 
+    public:
+    Bin()
+    {
+        init();
+    }
+    void init()
+    {
+        ll.SetZero();
+        ur.SetZero();
+        center.SetZero();
+        width = 0;
+        height = 0;
+        terminalDensity = 0;
+        darkDensity = 0;
+    }
+    POS_2D ll;
+    POS_2D ur;
+    POS_2D center;
+    double width;
+    double height;
+    double terminalDensity;
+    double darkDensity;
+};
 #endif

@@ -1,6 +1,11 @@
 
 #include <chrono>
 #include <iostream>
+
+/**
+ * @brief A simple timer class to measure elapsed time.
+ *          Usage:(task_name is optional)
+ */
 class Timer
 {
     public:
