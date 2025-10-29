@@ -30,7 +30,7 @@ struct POS_2D // POS means postition which can be used to store coordinates, off
     }
     inline void SetZero()
     {
-        x = y = 0.0; 
+        x = y = 0.0;
     }
     friend inline std::ostream &operator<<(std::ostream &os, const POS_2D &pos)
     {
@@ -85,5 +85,24 @@ struct VECTOR_3D
     {
         return (this->x * rhs.x + this->y * rhs.y + this->z * rhs.z);
     }
+};
+
+// 方向枚举
+
+enum class ORIENT
+{
+    N = 0, // North
+    S = 1  // South
+};
+// 间隔结构体
+struct Interval
+{
+    POS_2D ll; // 左下坐标 (lower left)
+    POS_2D ur; // 右上坐标 (upper right)
+
+    Interval() = default;
+
+    Interval(const POS_2D &lower_left, const POS_2D &upper_right)
+        : ll(lower_left), ur(upper_right) {}
 };
 #endif

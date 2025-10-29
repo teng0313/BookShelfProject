@@ -139,72 +139,94 @@ void FileReader::read_nets(const std::filesystem::path &nets_path) {
 
 void FileReader::read_scl(const fs::path& scl_path)
 {
-    if (scl_path.extension() != ".scl") {
-        throw std::runtime_error("File extension is not .scl");
+     Timer timer;
+    if(scl_path.extension() != ".scl"){
+       throw std::runtime_error("File extension is not .scl");
     }
-
+    
     std::ifstream file(scl_path);
-    if (!file) {
+    if(!file){
         throw std::runtime_error("File not found/opened: " + scl_path.filename().string());
     }
 
+    // 解析 .scl 文件
     std::string line;
     int numRows = 0;
-    while (std::getline(file, line)) {
-        // 去除注释和空行
-        if (line.empty() || line[0] == '#') continue;
-
-        std::istringstream iss(line);
-        std::string token;
-        iss >> token;
-
-        if (token == "NumRows") {
-            iss.ignore(256, ':');
-            iss >> numRows;
-            pdata->numRows = numRows; // 如果PlaceData有这个字段
-        } else if (token == "CoreRow") {
-            // 进入CoreRow块
-            std::string orientation;
-            iss >> orientation; // Horizontal
-            int Coordinate = 0, Height = 0, Sitewidth = 0, Sitespacing = 0;
-            int Siteorient = 0, Sitesymmetry = 0, SubrowOrigin = 0, NumSites = 0;
-
-            // 逐行读取CoreRow参数
-            while (std::getline(file, line)) {
-                if (line.find("End") != std::string::npos) break;
-                std::istringstream row_iss(line);
-                std::string key;
-                row_iss >> key;
-                if (key == "Coordinate") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> Coordinate;
-                } else if (key == "Height") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> Height;
-                } else if (key == "Sitewidth") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> Sitewidth;
-                } else if (key == "Sitespacing") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> Sitespacing;
-                } else if (key == "Siteorient") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> Siteorient;
-                } else if (key == "Sitesymmetry") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> Sitesymmetry;
-                } else if (key == "SubrowOrigin") {
-                    row_iss.ignore(256, ':');
-                    row_iss >> SubrowOrigin;
-                    std::string dummy;
-                    row_iss >> dummy; // NumSites
-                    row_iss.ignore(256, ':');
-                    row_iss >> NumSites;
-                }
+    
+    // 跳过文件头部信息
+    while(std::getline(file, line)) {
+        if(line.find("NumRows") != std::string::npos) {
+            // 提取行数
+            auto tokens = splist_by_space(line);
+            if(tokens.size() >= 3 && tokens[0] == "NumRows" && tokens[1] == ":") {
+                numRows = std::stoi(tokens[2]);
+                break;
             }
         }
     }
-    std::cout << "read_scl done" << std::endl;
+    
+    // 开始解析每一行的CoreRow信息
+    pdata->SiteRows.reserve(numRows);
+    
+    while(std::getline(file, line)) {
+        if(line.find("CoreRow") != std::string::npos) {
+            // 找到一个CoreRow开始
+            auto siteRow = std::make_shared<SiteRow>();
+            
+            // 解析CoreRow信息
+            while(std::getline(file, line) && line.find("End") == std::string::npos) {
+                auto tokens = splist_by_space(line);
+                if(tokens.empty()) continue;
+                
+                if(tokens[0] == "Coordinate" && tokens.size() >= 3) {
+                    // 底部y坐标
+                    siteRow->bottom = std::stod(tokens[2]);
+                }
+                else if(tokens[0] == "Height" && tokens.size() >= 3) {
+                    // 行高
+                    siteRow->height = std::stod(tokens[2]);
+                }
+                else if(tokens[0] == "Sitewidth" && tokens.size() >= 3) {
+                    // 站点宽度 - 用于计算步长
+                    double sitewidth = std::stod(tokens[2]);
+                    siteRow->step = sitewidth;
+                }
+                else if(tokens[0] == "Sitespacing" && tokens.size() >= 3) {
+                    // 站点间距 - 可以用于调整步长
+                    double sitespacing = std::stod(tokens[2]);
+                    if(sitespacing != 1.0) { // 如果不是默认值1.0，则更新步长
+                        siteRow->step = sitespacing;
+                    }
+                }
+                else if(tokens[0] == "Siteorient" && tokens.size() >= 3) {
+                    // 方向 N (0) 或 S (1)
+                    int orient = std::stoi(tokens[2]);
+                    siteRow->orientation = (orient == 1) ? ORIENT::S : ORIENT::N;
+                }
+                else if(tokens[0] == "SubrowOrigin" && tokens.size() >= 5) {
+                    // 开始x坐标
+                    double origin_x = std::stod(tokens[2]);
+                    // 站点数量
+                    int numSites = std::stoi(tokens[4]);
+                    
+                    // 设置开始和结束坐标
+                    siteRow->start = POS_2D(origin_x, siteRow->bottom);
+                    siteRow->end = POS_2D(origin_x + numSites * siteRow->step, siteRow->bottom);
+                    
+                    // 创建间隔
+                    Interval interval;
+                    interval.ll = siteRow->start;
+                    interval.ur = siteRow->end;
+                    siteRow->intervals.push_back(interval);
+                }
+            }
+            
+            // 添加解析完成的SiteRow到pdata中
+            pdata->SiteRows.push_back(siteRow);
+        }
+    }
+    
+    std::cout << "read_scl done. Parsed " << pdata->SiteRows.size() << " site rows." << std::endl;
 }
 
 

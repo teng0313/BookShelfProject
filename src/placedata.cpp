@@ -96,3 +96,103 @@ void PlaceData::calculate_bins(){
 
 
 }
+
+
+// 计算布局区域总面积
+double PlaceData::calculate_site_rows_area() {
+    double total_area = 0.0;
+    for (const auto& row : SiteRows) {
+        total_area += row.getSizeRowArea();
+    }
+    return total_area;
+}
+
+// 判断一个模块是否在布局行内，以及计算重叠面积
+double calculate_overlap_area(const shared_ptr<Module>& module, const SiteRow& row) {
+    // 模块的四个角坐标
+    double module_left = module->center.x - module->width / 2;
+    double module_right = module->center.x + module->width / 2;
+    double module_bottom = module->center.y - module->height / 2;
+    double module_top = module->center.y + module->height / 2;
+    
+    // 布局行的四个角坐标
+    double row_left = row.start.x;
+    double row_right = row.end.x;
+    double row_bottom = row.bottom;
+    double row_top = row.bottom + row.height;
+    
+    // 计算x方向的重叠
+    double x_overlap = std::max(0.0, 
+                      std::min(module_right, row_right) - 
+                      std::max(module_left, row_left));
+                      
+    // 计算y方向的重叠
+    double y_overlap = std::max(0.0, 
+                      std::min(module_top, row_top) - 
+                      std::max(module_bottom, row_bottom));
+                      
+    // 返回重叠面积
+    return x_overlap * y_overlap;
+}
+
+// 计算terminals在布局行内的占用总面积
+double PlaceData::calculate_terminals_area_in_site_rows() {
+    double terminal_area = 0.0;
+    
+    // 遍历每个terminal
+    for (const auto& terminal : Terminals) {
+        double terminal_overlap_area = 0.0;
+        
+        // 对每个布局行，计算该terminal在其中的重叠面积
+        for (const auto& row : SiteRows) {
+            terminal_overlap_area += calculate_overlap_area(terminal, row);
+        }
+        
+        // 累加到总面积
+        terminal_area += terminal_overlap_area;
+    }
+    
+    return terminal_area;
+}
+
+// 计算空白面积
+double PlaceData::calculate_empty_area() {
+    double site_rows_area = calculate_site_rows_area();
+    double terminals_area = calculate_terminals_area_in_site_rows();
+    
+    empty_area = site_rows_area - terminals_area;
+    return empty_area;
+}
+
+// 计算标准单元和宏块面积
+void PlaceData::calculate_std_cell_and_macro_area() {
+    std_cell_area = 0.0;
+    macro_area = 0.0;
+    
+    for (const auto& node : Nodes) {
+        // 跳过固定节点和填充节点
+        if (node->isFixed || node->isFiller) {
+            continue;
+        }
+        
+        if (node->isMacro) {
+            macro_area += node->getArea();
+        } else {
+            std_cell_area += node->getArea();
+        }
+    }
+}
+
+// 计算总填充面积
+double PlaceData::calculate_total_fill_area() {
+    if (empty_area == 0) {
+        calculate_empty_area();
+    }
+    
+    calculate_std_cell_and_macro_area();
+    
+    // 根据公式计算总填充面积
+    total_fill_area = empty_area * target_density - (std_cell_area + macro_area * target_density);
+    
+    return total_fill_area;
+}

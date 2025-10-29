@@ -37,13 +37,12 @@ public:
         isMacro = false;
         isFiller = false;
         isFixed = false;
-     }
-    POS_2D center; 
+    }
+    POS_2D center;
 
     float getArea() const { return area; }
- 
 };
-class SiteRow 
+class SiteRow
 {
 public:
     SiteRow()
@@ -53,16 +52,19 @@ public:
         step = 0;
         start.SetZero();
         end.SetZero();
+        orientation = ORIENT::N; // 默认为北方向
     }
 
-    double bottom;             
-    double height;             
-    double step;                
-    POS_2D start;               
-    POS_2D end;    
-    
+    double bottom;
+    double height;
+    double step;
+    POS_2D start;
+    POS_2D end;
+    ORIENT orientation; // N (0) 或 S (1)
+
+    vector<Interval> intervals; // 间隔列表
+
     double getSizeRowArea() const { return height * (end.x - start.x); }
-    
 };
 
 class Pin
@@ -77,7 +79,6 @@ public:
     {
         idx = -1;
         offset.SetZero();
-
     }
     int idx;
     weak_ptr<Module> module;
@@ -85,19 +86,19 @@ public:
     POS_2D offset;
 };
 
-class Net {
+class Net
+{
 public:
-  Net(string &_name) : name(_name) { init(); }
-  string name;
-  vector<shared_ptr<Pin>> netPins;
+    Net(string &_name) : name(_name) { init(); }
+    string name;
+    vector<shared_ptr<Pin>> netPins;
 
-  void init() { netPins.clear(); }
+    void init() { netPins.clear(); }
 };
 
-
 class Bin
-{ 
-    public:
+{
+public:
     Bin()
     {
         init();

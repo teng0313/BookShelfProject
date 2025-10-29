@@ -17,6 +17,7 @@ public:
     vector<shared_ptr<Pin>> Pins;
     vector<shared_ptr<Net>> Nets;
     vector<SiteRow> SiteRows;
+    vector<shared_ptr<SiteRow>> siteRows; // 新添加的成员变量，用于存储SiteRow智能指针
 
     size_t max_net_degree{0};
 
@@ -46,25 +47,29 @@ public:
         fout << "Object #:" << num_modules << "(=" << static_cast<int>(num_modules / 1000) << "k)" << "(fixed:" << fixed_count << ")(macro:" << macro_count << ") " << std::endl;
     }
 
-    
-    //TODO variables
-    double core_area {0};
+    // TODO variables
+    double core_area{0};
 
-
-
-
-
-
-    
     // task 4
-    // （1）计算空白面积 = 布局行 SiteRow 区域面积-（terminal 在布局行区域内占
-    // 用的总面积）
-    double empty_area;
-    // 计算总填充面积 = 空白面积* targetDensity - （标准单元面积 + 宏块面积*
-    // targetDensity）
-    double total_area;
+    double empty_area{0};      // 空白面积
+    double total_fill_area{0}; // 总填充面积
+    double std_cell_area{0};   // 标准单元面积
+    double macro_area{0};      // 宏块面积
 
+    // 计算布局区域总面积
+    double calculate_site_rows_area();
 
+    // 计算terminals在布局行内的占用总面积
+    double calculate_terminals_area_in_site_rows();
+
+    // 计算空白面积 = 布局行区域面积 - terminals在布局行区域内占用的总面积
+    double calculate_empty_area();
+
+    // 计算标准单元和宏块面积
+    void calculate_std_cell_and_macro_area();
+
+    // 计算总填充面积 = 空白面积 * targetDensity - (标准单元面积 + 宏块面积 * targetDensity)
+    double calculate_total_fill_area();
 
     // targetDensity 为设定的目标密度
     double target_density;
@@ -82,12 +87,11 @@ public:
     void create_padding_nodes(double setting_height, double setting_width,
                               double padding_area, int padding_num);
 
-
     double node_area{0};
     double average_node_area{0};
     double expected_grid_area{0};
     uint64_t expected_grid_num{0};
-    vector<vector<Bin>> bins {};
+    vector<vector<Bin>> bins{};
 
     // 计算节点面积 = 标准单元面积 + 宏块面积
     double calculate_node_area();
