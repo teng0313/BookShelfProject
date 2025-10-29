@@ -166,7 +166,7 @@ void FileReader::read_scl(const fs::path& scl_path)
     }
     
     // 开始解析每一行的CoreRow信息
-    pdata->SiteRows.reserve(numRows);
+    pdata->siteRows.reserve(numRows);
     
     while(std::getline(file, line)) {
         if(line.find("CoreRow") != std::string::npos) {
@@ -222,11 +222,11 @@ void FileReader::read_scl(const fs::path& scl_path)
             }
             
             // 添加解析完成的SiteRow到pdata中
-            pdata->SiteRows.push_back(siteRow);
+            pdata->siteRows.push_back(siteRow);
         }
     }
     
-    std::cout << "read_scl done. Parsed " << pdata->SiteRows.size() << " site rows." << std::endl;
+    std::cout << "read_scl done. Parsed " << pdata->siteRows.size() << " site rows." << std::endl;
 }
 
 
