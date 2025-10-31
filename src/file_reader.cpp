@@ -230,8 +230,6 @@ void FileReader::read_scl(const fs::path& scl_path)
 }
 
 void FileReader::read_nodes(const std::filesystem::path& nodes_path) {
-    std::cout << "Opening file: " << nodes_path << std::endl;
-
     // 检查文件扩展名
     if (nodes_path.extension() != ".nodes") {
         throw std::runtime_error("File extension is not .nodes");
