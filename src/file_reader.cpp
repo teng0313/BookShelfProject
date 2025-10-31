@@ -229,5 +229,83 @@ void FileReader::read_scl(const fs::path& scl_path)
     std::cout << "read_scl done. Parsed " << pdata->siteRows.size() << " site rows." << std::endl;
 }
 
+void FileReader::read_nodes(const std::filesystem::path& nodes_path) {
+    std::cout << "Opening file: " << nodes_path << std::endl;
 
+    // 检查文件扩展名
+    if (nodes_path.extension() != ".nodes") {
+        throw std::runtime_error("File extension is not .nodes");
+    }
+
+    // 打开文件
+    std::ifstream file(nodes_path);
+    if (!file) {
+        throw std::runtime_error("File not found/opened: " + nodes_path.filename().string());
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        // 跳过空行与注释
+        if (line.empty() || line[0] == '#')
+            continue;
+
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+
+        // 文件头信息
+        if (token == "NumNodes") {
+            iss.ignore(256, ':');
+            iss >> pdata->numNodes;
+        }
+        else if (token == "NumTerminals") {
+            iss.ignore(256, ':');
+            iss >> pdata->numTerminals;
+        }
+        else {
+            // 普通节点定义
+            std::string nodeName = token;
+            float width = 0.0f, height = 0.0f;
+            iss >> width >> height;
+
+            bool isTerminal = false;
+            std::string flag;
+            if (iss >> flag && flag == "terminal") {
+                isTerminal = true;
+            }
+
+            // 填充Node信息
+            Node node;
+            node.name = nodeName;
+            node.width = width;
+            node.height = height;
+            node.isTerminal = isTerminal;
+            pdata->v_Node.push_back(node);
+
+            // 同时构建Module对象
+            auto mod = std::make_shared<Module>();
+            mod->Init();
+            mod->name = nodeName;
+            mod->width = width;
+            mod->height = height;
+            mod->isFixed = isTerminal;
+            pdata->moduleMap[nodeName] = mod;
+        }
+    }
+
+    std::cout << "read_nodes done" << std::endl;
+    std::cout << "numNodes=" << pdata->numNodes << std::endl;
+    std::cout << "numTerminals=" << pdata->numTerminals << std::endl;
+
+    if (!pdata->v_Node.empty()) {
+        const auto& n = pdata->v_Node.front();
+        std::cout << "example:" << endl;
+        std::cout
+            << "name:" << n.name << " "
+            << "width:" << n.width << " "
+            << "height:" << n.height << " "
+            << "isTerminal" << " " << (n.isTerminal ? "yes" : "no")
+            << std::endl;
+    }
+}
 

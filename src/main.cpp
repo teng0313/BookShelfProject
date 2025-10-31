@@ -8,7 +8,7 @@ using namespace std::chrono;
 int main(int argc, char* argv[]) {
     std::cout << "Hello, World!" << std::endl;
   std::filesystem::path current_path = std::filesystem::current_path();
-  std::string file("/home/ezio/ClassProject3/adaptec1");
+  std::string file("C:\\Users\\USER\\source\\repos\\BookShelfProject\\adaptec1");
   std::cout << "Reading file: " << file << std::endl;
   
   auto fr = std::make_shared<FileReader>(file);

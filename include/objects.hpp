@@ -121,4 +121,11 @@ public:
     double terminalDensity;
     double darkDensity;
 };
+
+struct Node {
+    std::string name;
+    float width = 0;
+    float height = 0;
+    bool isTerminal = false;
+};
 #endif

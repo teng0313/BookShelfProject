@@ -46,3 +46,7 @@ build/
 adaptec*
 testout
 include/ThreadPool.hpp
+
+.vs/
+bin/
+obj/

@@ -34,7 +34,7 @@ class FileReader{
             // read_aux(aux_path);
             read_pl(pl_path);
             read_nets(nets_path);
-            // read_nodes(nodes_path);
+            read_nodes(nodes_path);
             
             read_scl(scl_path);
             // read_wts(wts_path);

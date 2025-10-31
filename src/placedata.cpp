@@ -196,3 +196,123 @@ double PlaceData::calculate_total_fill_area() {
     
     return total_fill_area;
 }
+
+
+// 计算两个矩形（module 与 bin）的重叠面积
+static double overlap_area_rect(const Module& module, const Bin& bin) {
+    // module 四个边
+    double ml = module.center.x - module.width / 2.0;
+    double mr = module.center.x + module.width / 2.0;
+    double mb = module.center.y - module.height / 2.0;
+    double mt = module.center.y + module.height / 2.0;
+
+    // bin 四个边
+    double bl = bin.ll.x;
+    double br = bin.ur.x;
+    double bb = bin.ur.y;  // 注意 bin 的 ur.y < ll.y
+    double bt = bin.ll.y;
+
+    // 求重叠范围
+    double x_overlap = std::max(0.0, std::min(mr, br) - std::max(ml, bl));
+    double y_overlap = std::max(0.0, std::min(mt, bt) - std::max(mb, bb));
+
+    return x_overlap * y_overlap;
+}
+
+// 计算 bin 超出所有 SiteRow 的区域面积
+static double dark_overlap_area(const Bin& bin, const std::vector<SiteRow>& siteRows) {
+    double bin_area = bin.width * bin.height;
+    double valid_area = 0.0;
+
+    // 遍历所有 SiteRow，计算重叠面积
+    for (const auto& row : siteRows) {
+        // row 的上下边界
+        double rl = row.start.x;
+        double rr = row.end.x;
+        double rb = row.bottom;
+        double rt = row.bottom + row.height;
+
+        double bl = bin.ll.x;
+        double br = bin.ur.x;
+        double bb = bin.ur.y;
+        double bt = bin.ll.y;
+
+        double x_overlap = std::max(0.0, std::min(br, rr) - std::max(bl, rl));
+        double y_overlap = std::max(0.0, std::min(bt, rt) - std::max(bb, rb));
+
+        valid_area += x_overlap * y_overlap;
+    }
+
+    // darkArea = bin面积 - 合法重叠面积
+    return std::max(0.0, bin_area - valid_area);
+}
+
+
+//计算终端的密度 terminalDensity和暗节点的密度 darkDensity
+void PlaceData::calculate_bins_density() {
+    if (bins.empty()) {
+        throw std::runtime_error("Bins have not been initialized. Call calculate_bins() first.");
+    }
+    if (Terminals.empty()) {
+        std::cerr << "[Warning] No terminals found. terminalDensity will remain zero.\n";
+    }
+    if (SiteRows.empty()) {
+        std::cerr << "[Warning] No SiteRows found. darkDensity will remain zero.\n";
+    }
+
+    std::cout << "[Density] Start calculating bin densities..." << std::endl;
+
+    for (auto& row_bins : bins) {
+        for (auto& bin : row_bins) {
+            bin.terminalDensity = 0.0;
+            bin.darkDensity = 0.0;
+
+            // terminalDensity 计算
+            for (const auto& terminal : Terminals) {
+                if (!terminal) continue;
+                double overlap = overlap_area_rect(*terminal, bin);
+                if (overlap > 0) {
+                    bin.terminalDensity += target_density * overlap;
+                }
+            }
+
+            // darkDensity 计算
+            double dark_area = dark_overlap_area(bin, SiteRows);
+            if (dark_area > 0) {
+                bin.darkDensity += target_density * dark_area;
+            }
+        }
+    }
+
+    std::cout << "[Density] Bin density calculation completed." << std::endl;
+
+    // 输出部分结果或矩阵密度分布
+    std::cout << "\n[Density Matrix] Terminal Density per bin:\n";
+
+    for (int i = bins.size() - 1; i >= 0; --i) {  
+        for (int j = 0; j < bins[i].size(); ++j) {
+            
+            double d = bins[i][j].terminalDensity;
+            if (d > 0.8) std::cout << "#";
+            else if (d > 0.5) std::cout << "*";
+            else if (d > 0.2) std::cout << "+";
+            else if (d > 0.0) std::cout << "-";
+            else std::cout << ".";
+        }
+        std::cout << "\n";
+    }
+
+    std::cout << "\n[Density Matrix] Dark Density per bin:\n";
+    for (int i = bins.size() - 1; i >= 0; --i) {
+        for (int j = 0; j < bins[i].size(); ++j) {
+            double d = bins[i][j].darkDensity;
+            if (d > 0.8) std::cout << "#";
+            else if (d > 0.5) std::cout << "*";
+            else if (d > 0.2) std::cout << "+";
+            else if (d > 0.0) std::cout << "-";
+            else std::cout << ".";
+        }
+        std::cout << "\n";
+    }
+
+}

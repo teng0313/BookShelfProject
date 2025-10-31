@@ -11,6 +11,9 @@ public:
     int netCount;
     int pinCount;
     int numRows;
+    int numNodes;
+    int numTerminals;
+    vector<Node> v_Node;
 
     vector<shared_ptr<Module>> Nodes;
     vector<shared_ptr<Module>> Terminals;
