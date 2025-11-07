@@ -11,7 +11,7 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp")
 
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} "src/Martix.cpp")
 
 add_compile_options(-Wall -Wextra -Werror)
 set(SANITIZER -fsanitize=address,undefined -fno-omit-frame-pointer)

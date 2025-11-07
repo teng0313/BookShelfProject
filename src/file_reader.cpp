@@ -280,7 +280,7 @@ void FileReader::read_nodes(const std::filesystem::path& nodes_path) {
             node.isTerminal = isTerminal;
             pdata->v_Node.push_back(node);
 
-            // 同时构建Module对象
+            // 构建Module对象
             auto mod = std::make_shared<Module>();
             mod->Init();
             mod->name = nodeName;
@@ -292,10 +292,11 @@ void FileReader::read_nodes(const std::filesystem::path& nodes_path) {
     }
 
     std::cout << "read_nodes done" << std::endl;
-    std::cout << "numNodes=" << pdata->numNodes << std::endl;
-    std::cout << "numTerminals=" << pdata->numTerminals << std::endl;
+    /*std::cout << "numNodes=" << pdata->numNodes << std::endl;
+    std::cout << "numTerminals=" << pdata->numTerminals << std::endl;*/
 
-    if (!pdata->v_Node.empty()) {
+    //测试
+    /*if (!pdata->v_Node.empty()) {
         const auto& n = pdata->v_Node.front();
         std::cout << "example:" << endl;
         std::cout
@@ -304,6 +305,6 @@ void FileReader::read_nodes(const std::filesystem::path& nodes_path) {
             << "height:" << n.height << " "
             << "isTerminal" << " " << (n.isTerminal ? "yes" : "no")
             << std::endl;
-    }
+    }*/
 }
 

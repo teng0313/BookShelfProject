@@ -1,11 +1,27 @@
 #ifndef PLACEDATA_H
 #define PLACEDATA_H
+#include "common.hpp"
 #include "objects.hpp"
 #include <cmath>
+#include <random>
+#include <filesystem>
+#include <map>
+#include <memory>
+
+
+using A_martix_t = vector<unordered_map<int, double>>;
+using b_martix_t = vector<double>;
 
 class PlaceData
 {
 public:
+     static std::mt19937& gen() {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        return gen;
+    }
+
+
     int moduleCount;
     int MacroCount;
     int netCount;
@@ -23,6 +39,7 @@ public:
     vector<shared_ptr<SiteRow>> siteRows; // 新添加的成员变量，用于存储SiteRow智能指针
 
     size_t max_net_degree{0};
+    std::map<int, int> pin_num;
 
     unordered_map<string, shared_ptr<Module>> moduleMap;
     shared_ptr<Module> getModuleByName(const string &name)
@@ -34,6 +51,7 @@ public:
         return nullptr;
     }
 
+    std::pair<A_martix_t, b_martix_t>  get_parm_matrix();
     void print_info()
     {
         int num_modules = Nodes.size();
@@ -49,6 +67,49 @@ public:
         std::ofstream fout("/home/ezio/ClassProject3/info.txt");
         fout << "Object #:" << num_modules << "(=" << static_cast<int>(num_modules / 1000) << "k)" << "(fixed:" << fixed_count << ")(macro:" << macro_count << ") " << std::endl;
     }
+
+    void get_parm_martix_info(std::filesystem::path path) {
+        std::ofstream fout(path);
+        auto result = get_parm_matrix();
+        fout << "get_parm_matrix" << std::endl;
+        for (auto& A : result.first)
+        {
+
+            for (auto& node : A)
+            {
+                fout << "A_martix_t: " << node.first << ": ";
+                fout << node.second << " ";
+            }
+            fout << std::endl;
+        }
+
+        fout << "b_martix_t" << std::endl;
+        for (auto& node : result.second)
+        {
+
+            fout << node << " ";
+
+            fout << std::endl;
+        }
+    }
+
+    void get_nodes_and_terminals_info()
+    {
+        int num_modules = Nodes.size();
+        int macro_count = 0;
+        int fixed_count = 0;
+        for (auto module : Nodes)
+        {
+            if (module->isMacro)
+                MacroCount++;
+            if (module->isFixed)
+                fixed_count++;
+        }
+        std::ofstream fout("/home/ezio/ClassProject3/info.txt");
+        fout << "Object #:" << num_modules << "(=" << static_cast<int>(num_modules / 1000) << "k)" << "(fixed:" << fixed_count << ")(macro:" << macro_count << ") " << std::endl;
+
+    }
+
 
     // TODO variables
     double core_area{0};
@@ -70,6 +131,12 @@ public:
 
     // 计算标准单元和宏块面积
     void calculate_std_cell_and_macro_area();
+
+    void calculate_padding_parameters();
+    void create_padding_nodes();
+    std::vector<std::unique_ptr<Module>> padding_nodes;
+    double total_area;
+    POS_2D random_position(std::mt19937& gen);
 
     // 计算总填充面积 = 空白面积 * targetDensity - (标准单元面积 + 宏块面积 * targetDensity)
     double calculate_total_fill_area();
@@ -128,5 +195,14 @@ public:
     void non_terminal_and_non_terminal();
 
     void terminal_and_non_terminal();
+
+
+    void computeWeightMatrices(
+        const vector<shared_ptr<Net>>& nets,
+        const vector<shared_ptr<Module>>& modules,
+        vector<vector<double>>& W_x_off,
+        vector<vector<double>>& W_y_off,
+        double eps = 1e-6 // 防止除零的小量
+    );
 };
 #endif
